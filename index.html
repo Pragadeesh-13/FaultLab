@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FaultLab — Hardware Fault Injection Simulation</title>
+  <meta name="description" content="Interactive educational simulator demonstrating hardware fault injection attacks on ElGamal and Cramer-Shoup cryptosystems. Compare how CCA2-secure schemes detect tampering that basic schemes miss.">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/cyber-theme.css">
+  <link rel="stylesheet" href="css/hardware.css">
+  <link rel="stylesheet" href="css/comparative.css">
+  <link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    
+    <!-- Minimalist Navbar -->
+    <header class="cyber-navbar">
+      <h1 class="brand-title">FaultLab</h1>
+      <nav class="nav-links">
+        <a href="#landing-hero" class="nav-link active" data-section="landing">About</a>
+        <a href="#simulator-section" class="nav-link" data-section="simulator">Simulator</a>
+      </nav>
+    </header>
+
+    <!-- ============================================ -->
+    <!--             LANDING PAGE SECTION              -->
+    <!-- ============================================ -->
+    <section id="landing-hero" class="landing-hero">
+      
+      <!-- Hero Content -->
+      <div class="hero-content">
+
+
+        <h2 class="hero-title">
+          Hardware Fault Injection
+          <span class="hero-title-accent">Simulation</span>
+        </h2>
+
+        <p class="hero-description">
+          An interactive simulation demonstrating what happens when an attacker introduces computational faults — such as single-bit flips — during cryptographic decryption. Compare how different cryptosystems respond to identical hardware attacks.
+        </p>
+
+        <div class="hero-cta-row">
+          <button id="btn-enter-lab" class="btn-hero-primary">
+            <span class="material-symbols-outlined">arrow_forward</span>
+            Enter the Lab
+          </button>
+          <a href="#how-it-works" class="btn-hero-secondary">
+            <span class="material-symbols-outlined">info</span>
+            How It Works
+          </a>
+        </div>
+      </div>
+
+      <!-- Hero Visual: Animated Bit Grid -->
+      <div class="hero-visual">
+        <canvas id="hero-bit-canvas" width="480" height="320"></canvas>
+        <div class="hero-visual-overlay">
+          <div class="hero-stat">
+            <span class="hero-stat-value">8-bit</span>
+            <span class="hero-stat-label">Register Width</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-value">p = 227</span>
+            <span class="hero-stat-label">Prime Modulus</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-value">2</span>
+            <span class="hero-stat-label">Cryptosystems</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- What Is This Section -->
+    <section id="how-it-works" class="landing-section">
+      <h3 class="section-heading">
+        <span class="material-symbols-outlined section-icon">menu_book</span>
+        What Is This Project?
+      </h3>
+      <p class="section-body">
+        FaultLab is an educational tool that simulates <strong>laser fault injection (LFI)</strong> attacks against public-key cryptosystems. In real hardware, an attacker can use a focused laser beam to flip individual transistor bits on a silicon die during computation. This project visualizes that process and shows — at the bit level — how the math breaks down.
+      </p>
+    </section>
+
+    <!-- Comparison Cards -->
+    <section class="landing-section">
+      <h3 class="section-heading">
+        <span class="material-symbols-outlined section-icon">compare</span>
+        Two Cryptosystems, One Attack
+      </h3>
+
+      <div class="compare-cards-grid">
+        
+        <!-- ElGamal Card -->
+        <div class="compare-intro-card elgamal-intro">
+          <div class="compare-intro-icon">
+            <span class="material-symbols-outlined">lock_open</span>
+          </div>
+          <h4>ElGamal</h4>
+          <p class="compare-intro-type">IND-CPA Secure (Basic)</p>
+          <ul class="compare-intro-list">
+            <li>
+              <span class="material-symbols-outlined li-icon">check</span>
+              Secure against passive eavesdroppers
+            </li>
+            <li>
+              <span class="material-symbols-outlined li-icon">close</span>
+              No integrity verification tag
+            </li>
+            <li>
+              <span class="material-symbols-outlined li-icon">close</span>
+              Malleable — bit flips go undetected
+            </li>
+            <li>
+              <span class="material-symbols-outlined li-icon">close</span>
+              Outputs corrupted plaintext silently
+            </li>
+          </ul>
+          <div class="compare-intro-verdict verdict-vulnerable">
+            <span class="material-symbols-outlined">warning</span>
+            Vulnerable to Fault Injection
+          </div>
+        </div>
+
+        <!-- Cramer-Shoup Card -->
+        <div class="compare-intro-card cramershoup-intro">
+          <div class="compare-intro-icon">
+            <span class="material-symbols-outlined">shield</span>
+          </div>
+          <h4>Cramer-Shoup</h4>
+          <p class="compare-intro-type">IND-CCA2 Secure (Adaptive)</p>
+          <ul class="compare-intro-list">
+            <li>
+              <span class="material-symbols-outlined li-icon">check</span>
+              Secure against active attackers
+            </li>
+            <li>
+              <span class="material-symbols-outlined li-icon">check</span>
+              Built-in cryptographic proof tag (v, v')
+            </li>
+            <li>
+              <span class="material-symbols-outlined li-icon">check</span>
+              Detects any bit-level tampering
+            </li>
+            <li>
+              <span class="material-symbols-outlined li-icon">check</span>
+              Aborts and withholds corrupted data
+            </li>
+          </ul>
+          <div class="compare-intro-verdict verdict-protected">
+            <span class="material-symbols-outlined">verified_user</span>
+            Resistant to Fault Injection
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How The Simulation Works -->
+    <section class="landing-section">
+      <h3 class="section-heading">
+        <span class="material-symbols-outlined section-icon">flowchart</span>
+        How The Simulation Works
+      </h3>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h5>Enter Plaintext</h5>
+          <p>Type a message like "HELLO" or a number like 123. This is encrypted using both ElGamal and Cramer-Shoup with identical 8-bit parameters (p = 227).</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h5>Inject a Fault</h5>
+          <p>Click the silicon die to fire a laser, or click the oscilloscope to inject a voltage glitch. This flips a random bit in the ciphertext during decryption.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h5>Compare Results</h5>
+          <p>Watch the side-by-side 8-bit calculation trace. ElGamal silently outputs a corrupted byte. Cramer-Shoup detects the mismatch (v != v') and aborts.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why ElGamal Fails / How Cramer-Shoup Prevents It -->
+    <section class="landing-section">
+      <h3 class="section-heading">
+        <span class="material-symbols-outlined section-icon">security</span>
+        Why ElGamal Fails and How Cramer-Shoup Prevents It
+      </h3>
+
+      <div class="attack-flow-grid">
+
+        <!-- ElGamal Failure Flow -->
+        <div class="attack-flow-card flow-fail">
+          <div class="flow-card-header">
+            <span class="material-symbols-outlined" style="color: #fb7185;">warning</span>
+            <div>
+              <h5>ElGamal: Why It Fails</h5>
+              <span class="flow-card-sub">Like sending a secret letter in an unsealed envelope</span>
+            </div>
+          </div>
+
+          <div class="flow-step-list">
+            <div class="flow-step">
+              <div class="flow-step-num fail-num">1</div>
+              <div>
+                <strong>Message is hidden, but never checked</strong>
+                <p>ElGamal scrambles your secret message so eavesdroppers cannot read it. But it never attaches any tamper seal or checksum to verify if anyone altered the data.</p>
+              </div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-step-num fail-num">2</div>
+              <div>
+                <strong>A laser flips a single bit in the chip</strong>
+                <p>During decryption, an attacker hits the chip with a laser pulse or power glitch. This flips a single 0 into a 1 inside the chip's memory.</p>
+              </div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-step-num fail-num">3</div>
+              <div>
+                <strong>The chip blindly unlocks the corrupted data</strong>
+                <p>Because ElGamal has no built-in verification, the chip doesn't know anything is wrong. It blindly completes the math on the altered bits.</p>
+              </div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-step-num fail-num">4</div>
+              <div>
+                <strong>Silent failure — corrupted output accepted</strong>
+                <p>The system spits out corrupted text or wrong numbers without any warning or error. The receiver trusts it blindly, and the attacker wins without ever cracking the private key.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-verdict flow-verdict-fail">
+            <span class="material-symbols-outlined">dangerous</span>
+            Result: Tampered data accepted blindly (0% detection)
+          </div>
+        </div>
+
+        <!-- Cramer-Shoup Defense Flow -->
+        <div class="attack-flow-card flow-defend">
+          <div class="flow-card-header">
+            <span class="material-symbols-outlined" style="color: #22d3ee;">shield</span>
+            <div>
+              <h5>Cramer-Shoup: How It Prevents It</h5>
+              <span class="flow-card-sub">Like a security lockbox with a tamper-evident wax seal</span>
+            </div>
+          </div>
+
+          <div class="flow-step-list">
+            <div class="flow-step">
+              <div class="flow-step-num defend-num">1</div>
+              <div>
+                <strong>Message is locked with a security seal</strong>
+                <p>Cramer-Shoup encrypts the message and attaches a unique mathematical "proof tag" (a digital seal) that binds all parts of the ciphertext together.</p>
+              </div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-step-num defend-num">2</div>
+              <div>
+                <strong>The laser flips a bit in the chip</strong>
+                <p>The attacker targets the hardware with the exact same laser fault, changing a bit in memory during the decryption process.</p>
+              </div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-step-num defend-num">3</div>
+              <div>
+                <strong>The security seal breaks immediately</strong>
+                <p>Before opening the message, the chip recalculates what the seal should look like. Because even a single bit changed, the seal no longer matches.</p>
+              </div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-step-num defend-num">4</div>
+              <div>
+                <strong>Instant abort — attack completely blocked</strong>
+                <p>The chip catches the mismatch, sounds an alarm, and immediately stops decryption. It wipes the data and refuses to output corrupted plaintext, keeping the system safe.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-verdict flow-verdict-defend">
+            <span class="material-symbols-outlined">verified_user</span>
+            Result: Tampering detected and blocked instantly (100% detection)
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Enter Lab CTA -->
+    <section class="landing-section landing-cta-section">
+      <button id="btn-enter-lab-bottom" class="btn-hero-primary btn-hero-lg">
+        <span class="material-symbols-outlined">arrow_forward</span>
+        Enter the Lab
+      </button>
+    </section>
+
+
+    <!-- ============================================ -->
+    <!--           SIMULATOR SECTION (HIDDEN)          -->
+    <!-- ============================================ -->
+    <section id="simulator-section" class="simulator-section" style="display: none;">
+      <main class="main-content">
+        
+        <!-- Minimalist Controls Toolbar -->
+        <div class="cyber-card" style="margin-bottom: 24px;">
+          <div class="control-row" style="align-items: center; justify-content: space-between;">
+            
+            <!-- Left: Message Input -->
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; flex: 1;">
+              
+              <!-- Input Type -->
+              <div class="control-field" style="max-width: 170px; min-width: 140px;">
+                <label for="input-mode-select">Input Type:</label>
+                <select id="input-mode-select" class="cyber-select">
+                  <option value="text" selected>Text ("HELLO")</option>
+                  <option value="number">Number (123)</option>
+                </select>
+              </div>
+
+              <!-- Message Box -->
+              <div class="control-field" style="min-width: 200px; max-width: 280px;">
+                <label for="main-message-input">Plaintext Message to Encrypt:</label>
+                <input type="text" id="main-message-input" class="cyber-input" value="HELLO" placeholder="e.g. HELLO or 123" maxlength="12">
+              </div>
+
+              <!-- Quick Samples -->
+              <div class="control-field" style="max-width: 230px;">
+                <label>Quick Samples:</label>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="btn btn-xs btn-cyber-outline btn-quick-sample" data-sample="HELLO" data-mode="text">"HELLO"</button>
+                  <button type="button" class="btn btn-xs btn-cyber-outline btn-quick-sample" data-sample="123" data-mode="number">123</button>
+                  <button type="button" class="btn btn-xs btn-cyber-outline btn-quick-sample" data-sample="PASS" data-mode="text">"PASS"</button>
+                  <button type="button" class="btn btn-xs btn-cyber-outline btn-quick-sample" data-sample="42" data-mode="number">42</button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right: Action Buttons -->
+            <div style="display: flex; gap: 12px; align-items: flex-end;">
+              <button id="btn-pres-normal" class="btn btn-cyber-outline" style="font-size: 14px; padding: 10px 18px;">
+                <span class="material-symbols-outlined icon-inline">check</span> Run Normal (No Fault)
+              </button>
+              <button id="btn-pres-inject" class="btn btn-cyber-danger" style="font-size: 14px; padding: 10px 22px;">
+                <span class="material-symbols-outlined icon-inline">bolt</span> Inject Hardware Fault
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Hardware Visual Workbench Grid (Die Canvas + Oscilloscope) -->
+        <div class="hardware-workbench-grid">
+          
+          <!-- Silicon Die Canvas -->
+          <div class="cyber-card die-panel">
+            <div class="card-title">
+              <span class="card-title-icon"><span class="material-symbols-outlined">memory</span></span>
+              <span>Silicon Die Floorplan & Laser Fault Injection</span>
+              <span style="font-size: 11px; color: #64748b; font-weight: normal; margin-left: auto;">Click die to aim & fire laser</span>
+            </div>
+
+            <div class="die-canvas-wrapper">
+              <canvas id="die-canvas" width="540" height="340"></canvas>
+            </div>
+
+            <div class="die-legend-bar">
+              <div class="legend-item"><span class="legend-color-dot" style="background: #0ea5e9;"></span> Modular Math ALU</div>
+              <div class="legend-item"><span class="legend-color-dot" style="background: #8b5cf6;"></span> Register Bank</div>
+              <div class="legend-item"><span class="legend-color-dot" style="background: #10b981;"></span> Universal Hash Core</div>
+              <div class="legend-item"><span class="legend-color-dot" style="background: #f59e0b;"></span> Control & Branch Gate</div>
+            </div>
+          </div>
+
+          <!-- Oscilloscope Panel -->
+          <div class="cyber-card oscilloscope-panel">
+            <div class="card-title">
+              <span class="card-title-icon"><span class="material-symbols-outlined">show_chart</span></span>
+              <span>Digital Oscilloscope (Clock & Voltage Rail Monitor)</span>
+              <span style="font-size: 11px; color: #64748b; font-weight: normal; margin-left: auto;">Click waveform to inject voltage glitch</span>
+            </div>
+
+            <div class="osc-screen-wrapper">
+              <canvas id="oscilloscope-canvas" width="500" height="340"></canvas>
+            </div>
+
+            <div class="osc-controls-bar">
+              <span>SAMPLING: 2.5 GSa/s</span>
+              <span>BW: 500 MHz</span>
+              <span>COUPLING: DC 50Ω</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Interactive Bit-Level Register Inspector -->
+        <div id="bit-inspector-container" style="margin-bottom: 24px;"></div>
+
+        <!-- Direct Side-by-Side Mathematical Calculation: ElGamal vs Cramer-Shoup -->
+        <div id="presentation-compare-container"></div>
+
+      </main>
+    </section>
+
+  </div>
+
+  <!-- Landing Page Hero Canvas Animation -->
+  <script>
+    // Animated binary rain canvas for hero section
+    (function() {
+      const canvas = document.getElementById('hero-bit-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      const cols = Math.floor(w / 18);
+      const drops = Array.from({ length: cols }, () => Math.random() * h / 14);
+      const chars = '01';
+
+      function draw() {
+        ctx.fillStyle = 'rgba(7, 10, 19, 0.12)';
+        ctx.fillRect(0, 0, w, h);
+
+        for (let i = 0; i < cols; i++) {
+          const char = chars[Math.floor(Math.random() * 2)];
+          const x = i * 18;
+          const y = drops[i] * 14;
+
+          // Random red "fault" bits
+          if (Math.random() > 0.97) {
+            ctx.fillStyle = '#f43f5e';
+            ctx.font = 'bold 13px "JetBrains Mono", monospace';
+          } else {
+            ctx.fillStyle = `rgba(56, 189, 248, ${0.3 + Math.random() * 0.5})`;
+            ctx.font = '12px "JetBrains Mono", monospace';
+          }
+
+          ctx.fillText(char, x, y);
+
+          if (y > h && Math.random() > 0.96) {
+            drops[i] = 0;
+          }
+          drops[i] += 0.6 + Math.random() * 0.4;
+        }
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+  </script>
+
+  <!-- Landing Page Navigation Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const landingHero = document.getElementById('landing-hero');
+      const allLandingSections = document.querySelectorAll('.landing-section');
+      const simulatorSection = document.getElementById('simulator-section');
+      const navLinks = document.querySelectorAll('.nav-link');
+      const enterLabBtns = document.querySelectorAll('#btn-enter-lab, #btn-enter-lab-bottom');
+
+      function showSimulator() {
+        landingHero.style.display = 'none';
+        allLandingSections.forEach(s => s.style.display = 'none');
+        simulatorSection.style.display = 'block';
+        navLinks.forEach(l => l.classList.remove('active'));
+        document.querySelector('.nav-link[data-section="simulator"]').classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function showLanding() {
+        simulatorSection.style.display = 'none';
+        landingHero.style.display = '';
+        allLandingSections.forEach(s => s.style.display = '');
+        navLinks.forEach(l => l.classList.remove('active'));
+        document.querySelector('.nav-link[data-section="landing"]').classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      enterLabBtns.forEach(btn => btn.addEventListener('click', showSimulator));
+
+      navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (link.dataset.section === 'simulator') {
+            showSimulator();
+          } else {
+            showLanding();
+          }
+        });
+      });
+    });
+  </script>
+
+  <!-- Application Module -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

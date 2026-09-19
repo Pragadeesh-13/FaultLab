@@ -1,0 +1,215 @@
+/* Cyber Theme UI Components, Inputs, and Glassmorphism */
+
+.cyber-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 18px 22px;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cyber-card:hover {
+  border-color: rgba(71, 85, 105, 0.9);
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.card-title-icon {
+  color: var(--accent-cyan);
+}
+
+/* Inputs & Form Controls */
+.control-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.control-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.control-field label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+}
+
+.cyber-input, .cyber-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: #f1f5f9;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.cyber-input:focus, .cyber-select:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px var(--accent-cyan-glow);
+}
+
+.cyber-range {
+  accent-color: var(--accent-cyan);
+  cursor: pointer;
+  height: 6px;
+  border-radius: 4px;
+}
+
+/* Buttons */
+.btn {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+
+.btn-cyber-primary {
+  background: linear-gradient(135deg, #0284c7, #06b6d4);
+  color: #ffffff;
+  border-color: #38bdf8;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
+}
+
+.btn-cyber-primary:hover {
+  background: linear-gradient(135deg, #0369a1, #0891b2);
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn-cyber-danger {
+  background: linear-gradient(135deg, #dc2626, #f43f5e);
+  color: #ffffff;
+  border-color: #fb7185;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.4);
+}
+
+.btn-cyber-danger:hover {
+  background: linear-gradient(135deg, #b91c1c, #e11d48);
+  box-shadow: 0 0 22px rgba(244, 63, 94, 0.6);
+  transform: translateY(-1px);
+}
+
+.btn-cyber-outline {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: var(--border-subtle);
+  color: #cbd5e1;
+}
+
+.btn-cyber-outline:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: #64748b;
+  color: #f8fafc;
+}
+
+.btn-xs {
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+/* Security Alert Boxes */
+.alert-box {
+  display: flex;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  margin-top: 18px;
+  border-width: 1px;
+  border-style: solid;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.alert-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.alert-text {
+  flex: 1;
+}
+
+.alert-text strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.alert-text p {
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.alert-action {
+  margin-top: 10px;
+}
+
+.alert-danger {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: var(--border-danger);
+  box-shadow: var(--glow-box-danger);
+}
+.alert-danger strong { color: #f87171; }
+
+.alert-success {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+.alert-success strong { color: #34d399; }
+
+.alert-warning {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+}
+.alert-warning strong { color: #fbbf24; }
+
+.alert-neutral {
+  background: rgba(30, 41, 59, 0.4);
+  border-color: var(--border-subtle);
+}
+.alert-neutral strong { color: #38bdf8; }
+
+/* Text Color Classes */
+.text-green { color: #10b981; }
+.text-danger { color: #ef4444; }
+.text-warning { color: #f59e0b; }
+.text-amber { color: #f59e0b; }
+.text-slate { color: #64748b; }
