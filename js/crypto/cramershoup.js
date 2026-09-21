@@ -2,7 +2,7 @@
 import { BigMath } from './bigmath.js';
 
 export class CramerShoupEngine {
-  constructor() {
+  constructor(customParams = null) {
     // 8-bit Safe prime p = 227 (q = (p-1)/2 = 113 is prime)
     // Subgroup generators: g1 = 4 (which is 2^2 mod p), g2 = 9 (3^2 mod p) in subgroup G_q
     this.defaultParams = {
@@ -16,7 +16,31 @@ export class CramerShoupEngine {
       y2: 51n,
       z: 73n
     };
-    this.keys = this.generateKeys(this.defaultParams);
+    this.params = { ...this.defaultParams, ...(customParams || {}) };
+    this.keys = this.generateKeys(this.params);
+  }
+
+  // Pick a dynamic random ephemeral nonce k in [2, q - 2]
+  getRandomNonce(q = this.params.q || 113n) {
+    const qNum = Number(q);
+    return BigInt(Math.floor(Math.random() * (qNum - 3)) + 2);
+  }
+
+  // Generate dynamic random private keys (x1, x2, y1, y2, z) and compute public keys (c, d, h)
+  generateRandomKeys() {
+    const qNum = Number(this.params.q);
+    const randZq = () => BigInt(Math.floor(Math.random() * (qNum - 3)) + 2);
+
+    this.params = {
+      ...this.params,
+      x1: randZq(),
+      x2: randZq(),
+      y1: randZq(),
+      y2: randZq(),
+      z: randZq()
+    };
+    this.keys = this.generateKeys(this.params);
+    return this.keys;
   }
 
   generateKeys(params = this.defaultParams) {
@@ -36,13 +60,26 @@ export class CramerShoupEngine {
     };
   }
 
-  // Encrypt: returns 4-tuple ciphertext (u1, u2, e, v)
-  encrypt(m, pubKey = this.keys.publicKey, ephemeralK = null) {
+  // Dynamically normalize any input number to valid field range [1, p - 1]
+  // Allows arbitrary integers (e.g. 0, 42, 250, 1000) without crashing
+  normalizePlaintext(m, p = this.keys.publicKey.p) {
     m = BigInt(m);
-    const { p, q, g1, g2, c, d, h } = pubKey;
-    if (m >= p || m <= 0n) throw new Error(`Plaintext m (${m}) must be in range [1, ${p - 1n}]`);
+    p = BigInt(p);
+    if (m > 0n && m < p) return m;
+    let norm = BigMath.mod(m, p - 1n);
+    return norm === 0n ? 1n : norm;
+  }
 
-    const k = ephemeralK ? BigInt(ephemeralK) : 19n;
+  // Encrypt: returns 4-tuple ciphertext (u1, u2, e, v)
+  // Supports dynamic random nonce k and dynamic arbitrary input numbers
+  encrypt(m, pubKey = this.keys.publicKey, ephemeralK = null) {
+    const { p, q, g1, g2, c, d, h } = pubKey;
+    m = this.normalizePlaintext(m, p);
+
+    // Dynamic ephemeral key k: random nonce if not explicitly provided
+    const k = ephemeralK !== null && ephemeralK !== undefined
+      ? BigInt(ephemeralK)
+      : this.getRandomNonce(q);
 
     // u1 = g1^k mod p
     const u1 = BigMath.modExp(g1, k, p);
@@ -52,7 +89,7 @@ export class CramerShoupEngine {
     const hk = BigMath.modExp(h, k, p);
     const e = BigMath.mod(hk * m, p);
 
-    // Hash computation alpha = H(u1, u2, e)
+    // Universal hash computation alpha = H(u1, u2, e) mod q
     const alpha = BigMath.hashCS(u1, u2, e, q);
 
     // Verification tag v = c^k * d^(k * alpha) mod p
@@ -67,7 +104,7 @@ export class CramerShoupEngine {
       k,
       stages: [
         { name: 'Plaintext m', reg: 'm', value: m, hex: BigMath.toHex(m) },
-        { name: 'Ephemeral Nonce k', reg: 'k', value: k, hex: BigMath.toHex(k) },
+        { name: 'Ephemeral Nonce k (Dynamic)', reg: 'k', value: k, hex: BigMath.toHex(k) },
         { name: 'Commitment u1', reg: 'u1 = g1^k mod p', value: u1, hex: BigMath.toHex(u1) },
         { name: 'Commitment u2', reg: 'u2 = g2^k mod p', value: u2, hex: BigMath.toHex(u2) },
         { name: 'Masked Message e', reg: 'e = h^k * m mod p', value: e, hex: BigMath.toHex(e) },
@@ -87,10 +124,10 @@ export class CramerShoupEngine {
     const { p, q, x1, x2, y1, y2, z } = privKey;
 
     const stages = [
-      { id: 'cs_u1', name: 'Input Commitment u1', reg: 'u1', value: u1, bitWidth: 16 },
-      { id: 'cs_u2', name: 'Input Commitment u2', reg: 'u2', value: u2, bitWidth: 16 },
-      { id: 'cs_e', name: 'Input Encrypted Message e', reg: 'e', value: e, bitWidth: 16 },
-      { id: 'cs_v', name: 'Input Proof Tag v', reg: 'v', value: v, bitWidth: 16 }
+      { id: 'cs_u1', name: 'Input Commitment u1', reg: 'u1', value: u1, bitWidth: 8 },
+      { id: 'cs_u2', name: 'Input Commitment u2', reg: 'u2', value: u2, bitWidth: 8 },
+      { id: 'cs_e', name: 'Input Encrypted Message e', reg: 'e', value: e, bitWidth: 8 },
+      { id: 'cs_v', name: 'Input Proof Tag v', reg: 'v', value: v, bitWidth: 8 }
     ];
 
     if (faultHook && faultHook.target === 'cs_u1') {

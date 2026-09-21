@@ -123,7 +123,9 @@ export class CompareView {
     const csD = csRes.details || {};
 
     const targetChar = isTextMode ? (elgD.targetChar || input[1] || input[0] || 'E') : null;
-    const targetCharCode = isTextMode ? targetChar.charCodeAt(0) : Number(BigInt(input || 123) & 0xFFn);
+    const targetCharCode = isTextMode
+      ? targetChar.charCodeAt(0)
+      : Number(BigInt(elgRes.input !== undefined ? elgRes.input : (input || 123)) & 0xFFn);
 
     let html = `
       <div class="math-trace-wrapper">

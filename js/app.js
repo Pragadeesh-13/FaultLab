@@ -32,6 +32,7 @@ class FaultLabApp {
     this.dieCanvasElem = document.getElementById('die-canvas');
     this.oscCanvasElem = document.getElementById('oscilloscope-canvas');
     this.bitInspectorContainer = document.getElementById('bit-inspector-container');
+    this.btnRandomizeKeys = document.getElementById('btn-randomize-keys');
   }
 
   initViews() {
@@ -109,6 +110,14 @@ class FaultLabApp {
       this.state.bitIndex = Math.floor(Math.random() * 8);
       this.triggerHardwareGlitch();
     });
+
+    // Randomize keys button — generate fresh dynamic keys
+    if (this.btnRandomizeKeys) {
+      this.btnRandomizeKeys.addEventListener('click', () => {
+        this.compareView.runner.randomizeKeys();
+        this.runApp();
+      });
+    }
   }
 
   triggerHardwareGlitch() {
@@ -140,7 +149,9 @@ class FaultLabApp {
     });
 
     // Update Bit Inspector display with 8-bit register
-    const sampleVal = isText ? BigInt(inputVal.charCodeAt(0)) : BigInt(inputVal || 123);
+    const sampleVal = isText
+      ? BigInt(inputVal.charCodeAt(0))
+      : this.compareView.runner.elgamal.normalizePlaintext(inputVal || 123);
     const corruptedVal = this.state.withFault ? (sampleVal ^ (1n << BigInt(bitPos))) : sampleVal;
     this.bitInspector.update(corruptedVal, sampleVal, 8);
   }

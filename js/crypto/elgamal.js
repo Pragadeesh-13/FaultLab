@@ -2,14 +2,33 @@
 import { BigMath } from './bigmath.js';
 
 export class ElGamalEngine {
-  constructor() {
+  constructor(customParams = null) {
     // 8-bit Safe prime p = 227 (q = (p-1)/2 = 113 is prime), subgroup generator g = 4
     this.defaultParams = {
       p: 227n,
+      q: 113n,
       g: 4n,
-      x: 23n // Private key
+      x: 23n // Default private key
     };
-    this.keys = this.generateKeys(this.defaultParams.p, this.defaultParams.g, this.defaultParams.x);
+    this.params = { ...this.defaultParams, ...(customParams || {}) };
+    this.keys = this.generateKeys(this.params.p, this.params.g, this.params.x);
+  }
+
+  // Pick a dynamic random ephemeral nonce k in [2, q - 2]
+  getRandomNonce(q = this.params.q || 113n) {
+    const qNum = Number(q);
+    return BigInt(Math.floor(Math.random() * (qNum - 3)) + 2);
+  }
+
+  // Generate a dynamic random private key x and update public key y
+  generateRandomKeys(p = this.params.p, g = this.params.g, q = this.params.q) {
+    p = BigInt(p);
+    g = BigInt(g);
+    q = BigInt(q);
+    const randomX = BigInt(Math.floor(Math.random() * (Number(q) - 3)) + 2);
+    this.params.x = randomX;
+    this.keys = this.generateKeys(p, g, randomX);
+    return this.keys;
   }
 
   generateKeys(p = 227n, g = 4n, x = 23n) {
@@ -26,14 +45,26 @@ export class ElGamalEngine {
     };
   }
 
-  // Encrypt: returns ciphertext (c1, c2)
-  encrypt(m, pubKey = this.keys.publicKey, ephemeralK = null) {
+  // Dynamically normalize any input number to valid range [1, p - 1]
+  // Allows arbitrary integers (e.g. 0, 42, 250, 1000) without crashing
+  normalizePlaintext(m, p = this.keys.publicKey.p) {
     m = BigInt(m);
-    const { p, g, y } = pubKey;
-    if (m >= p || m <= 0n) throw new Error(`Plaintext m (${m}) must be in range [1, ${p - 1n}]`);
+    p = BigInt(p);
+    if (m > 0n && m < p) return m;
+    let norm = BigMath.mod(m, p - 1n);
+    return norm === 0n ? 1n : norm;
+  }
 
-    // Ephemeral key k
-    const k = ephemeralK ? BigInt(ephemeralK) : 15n;
+  // Encrypt: returns ciphertext (c1, c2)
+  // Supports dynamic random nonce k and dynamic arbitrary input numbers
+  encrypt(m, pubKey = this.keys.publicKey, ephemeralK = null) {
+    const { p, g, y } = pubKey;
+    m = this.normalizePlaintext(m, p);
+
+    // Dynamic ephemeral key k: random nonce if not explicitly provided
+    const k = ephemeralK !== null && ephemeralK !== undefined
+      ? BigInt(ephemeralK)
+      : this.getRandomNonce(this.params.q || 113n);
 
     // c1 = g^k mod p
     const c1 = BigMath.modExp(g, k, p);
@@ -48,7 +79,7 @@ export class ElGamalEngine {
       k,
       stages: [
         { name: 'Plaintext m', reg: 'm', value: m, hex: BigMath.toHex(m) },
-        { name: 'Ephemeral Nonce k', reg: 'k', value: k, hex: BigMath.toHex(k) },
+        { name: 'Ephemeral Nonce k (Dynamic)', reg: 'k', value: k, hex: BigMath.toHex(k) },
         { name: 'Ciphertext Component c1', reg: 'c1 = g^k mod p', value: c1, hex: BigMath.toHex(c1) },
         { name: 'Ciphertext Component c2', reg: 'c2 = m * y^k mod p', value: c2, hex: BigMath.toHex(c2) }
       ]

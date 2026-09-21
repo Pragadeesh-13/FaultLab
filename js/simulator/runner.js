@@ -9,6 +9,13 @@ export class SimulationRunner {
     this.cramershoup = new CramerShoupEngine();
   }
 
+  // Dynamic Key Randomization: generates fresh keys for both cryptosystems
+  randomizeKeys() {
+    const elgKeys = this.elgamal.generateRandomKeys();
+    const csKeys = this.cramershoup.generateRandomKeys();
+    return { elgKeys, csKeys };
+  }
+
   // Helper: Format raw numeric result back to text if in text mode
   static numToChar(num) {
     const code = Number(BigInt(num) % 256n);
@@ -107,7 +114,7 @@ export class SimulationRunner {
     };
   }
 
-  // Execution with Single Number (e.g. 123)
+  // Execution with Single Number (e.g. 123, 42, 250)
   _runNumberMode(algorithm, plaintext, faultSpec, targetStage) {
     plaintext = BigInt(plaintext);
 
@@ -122,7 +129,8 @@ export class SimulationRunner {
   }
 
   _runElGamal(m, faultSpec, targetStage) {
-    const enc = this.elgamal.encrypt(m);
+    const normalizedM = this.elgamal.normalizePlaintext(m);
+    const enc = this.elgamal.encrypt(normalizedM);
     const golden = this.elgamal.decrypt(enc.c1, enc.c2, this.elgamal.keys.privateKey, null);
 
     let faulty = null;
@@ -132,12 +140,13 @@ export class SimulationRunner {
     }
 
     const output = faulty ? faulty.plaintext : golden.plaintext;
-    const isCorrupted = faulty ? (output !== m) : false;
+    const isCorrupted = faulty ? (output !== normalizedM) : false;
 
     return {
       algorithm: 'ElGamal',
       algoId: 'elgamal',
-      input: m,
+      input: normalizedM,
+      originalInput: m,
       ciphertext: { c1: enc.c1, c2: enc.c2 },
       goldenOutput: golden.plaintext,
       actualOutput: output,
@@ -149,14 +158,15 @@ export class SimulationRunner {
       rejected: false,
       securityStatus: isCorrupted ? 'SILENT_CORRUPTION' : 'NORMAL',
       securitySummary: isCorrupted
-        ? `MALLEABLE FAILURE: Input ${m} silently decrypted as corrupted value ${output}!`
+        ? `MALLEABLE FAILURE: Input ${normalizedM} silently decrypted as corrupted value ${output}!`
         : `Normal: Decrypted ${output} successfully.`,
       details: (faulty || golden).details
     };
   }
 
   _runCramerShoup(m, faultSpec, targetStage) {
-    const enc = this.cramershoup.encrypt(m);
+    const normalizedM = this.cramershoup.normalizePlaintext(m);
+    const enc = this.cramershoup.encrypt(normalizedM);
     const golden = this.cramershoup.decrypt(enc.ciphertext, this.cramershoup.keys.privateKey, null);
 
     let faulty = null;
@@ -169,7 +179,7 @@ export class SimulationRunner {
     const isRejected = run.rejected;
     const isDetected = run.detected;
     const output = run.plaintext;
-    const isCorrupted = (!isRejected && output !== null && output !== m);
+    const isCorrupted = (!isRejected && output !== null && output !== normalizedM);
 
     let securityStatus = 'NORMAL';
     let summary = `Normal: Decrypted ${output} and verified tag v == v'.`;
@@ -185,7 +195,8 @@ export class SimulationRunner {
     return {
       algorithm: 'Cramer–Shoup',
       algoId: 'cramershoup',
-      input: m,
+      input: normalizedM,
+      originalInput: m,
       ciphertext: enc.ciphertext,
       goldenOutput: golden.plaintext,
       actualOutput: output,

@@ -42,8 +42,8 @@ export class FaultInjector {
     };
   }
 
-  // Corrupt random bits
-  static randomCorruption(value, count = 2, maxBit = 31) {
+  // Corrupt random bits (0 to 7 in 8-bit architecture)
+  static randomCorruption(value, count = 2, maxBit = 7) {
     const indices = new Set();
     while (indices.size < count) {
       indices.add(Math.floor(Math.random() * (maxBit + 1)));
@@ -77,10 +77,9 @@ export class FaultInjector {
     };
   }
 
-  // Clock glitch: either causes partial modular reduction or truncates high bits
+  // Clock glitch: causes timing violation in 8-bit register
   static clockGlitch(value, glitchIntensity = 0.5) {
     const val = BigInt(value);
-    // Glitch shifts bits or corrupts computation state
     if (glitchIntensity > 0.8) {
       return {
         original: val,
@@ -89,12 +88,12 @@ export class FaultInjector {
         description: 'Critical clock timing underflow: register cleared'
       };
     } else {
-      // Partial instruction corrupts lower nibble
-      const mask = BigInt(Math.floor(Math.random() * 0xFFFF));
+      // 8-bit bus corruption
+      const mask = BigInt(Math.floor(Math.random() * 0xFF));
       return {
         original: val,
         corrupted: val ^ mask,
-        affectedBits: [0, 1, 2, 3, 4],
+        affectedBits: [0, 1, 2, 3],
         mask,
         description: 'Clock setup time violation: ALU intermediate latched prematurely'
       };
@@ -110,7 +109,7 @@ export class FaultInjector {
       case FaultType.MULTI_BIT_BURST:
         return FaultInjector.flipMultipleBits(value, bitIndices);
       case FaultType.RANDOM_BYTE:
-        return FaultInjector.randomCorruption(value, 4, 15);
+        return FaultInjector.randomCorruption(value, 2, 7);
       case FaultType.STUCK_AT_ZERO:
         return FaultInjector.stuckAtZero(value, bitIndex);
       case FaultType.STUCK_AT_ONE:
